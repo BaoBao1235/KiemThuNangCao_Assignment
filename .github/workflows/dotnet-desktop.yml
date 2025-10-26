@@ -26,11 +26,9 @@ jobs:
       - name: Build solution
         run: msbuild PRO231-DuAnTotNghiep.sln /p:Configuration=Release
 
-      # ✅ Cài NUnit console runner đúng cách qua NuGet
       - name: Download NUnit Console Runner
         run: nuget install NUnit.ConsoleRunner -Version 3.16.3 -OutputDirectory testrunner
 
-      # ✅ Chạy test bằng console runner vừa cài
       - name: Run NUnit Tests
         run: |
-          ./testrunner/NUnit.ConsoleRunner.3.16.3/tools/nunit3-console.exe .\PRO231-DuAnTotNghiep.Tests\bin\Release\PRO231-DuAnTotNghiep.Tests.dll
+          ./testrunner/NUnit.ConsoleRunner.3.16.3/tools/nunit3-console.exe .\DuAnTotNghiep.Test\bin\Release\DuAnTotNghiep.Test.dll

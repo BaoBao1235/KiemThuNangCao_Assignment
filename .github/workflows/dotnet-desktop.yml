@@ -7,9 +7,10 @@ on:
     branches: [ main, master ]
 
 jobs:
-  # 🧱 Job 1: Build app .NET Framework
+  # 🧱 Job 1: Build ứng dụng .NET Framework
   build-framework:
     runs-on: windows-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,10 +27,11 @@ jobs:
       - name: Build .NET Framework solution
         run: msbuild PRO231-DuAnTotNghiep.sln /p:Configuration=Release /p:Platform="Any CPU"
 
-  # 🧩 Job 2: Build + Run tests (.NET 8)
+  # 🧩 Job 2: Build & Run Tests (.NET 8)
   test-dotnet:
     runs-on: windows-latest
     needs: build-framework
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,15 +41,19 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      # 🧰 Tạo file NuGet.Config giả để tránh restore gói .NET Framework
+      # ⚙️ Tạo file NuGet.Config giả để tránh restore gói .NET Framework
       - name: Disable legacy packages restore
         run: |
           echo "<?xml version='1.0' encoding='utf-8'?><configuration><disabledPackageSources><add key='local' value='true' /></disabledPackageSources></configuration>" > NuGet.Config
 
-      # ⚙️ Build riêng test project (bỏ qua reference tới project chính)
-      - name: Build test project only
-        run: dotnet build DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Release --no-restore /p:BuildProjectReferences=false
+      # ✅ Khôi phục gói cho test project (chỉ .NET 8)
+      - name: Restore NuGet packages for test project
+        run: dotnet restore DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj /p:BuildProjectReferences=false
 
-      # 🧪 Chạy test (.NET 8)
+      # 🧱 Build riêng test project (bỏ qua project chính .NET Framework)
+      - name: Build test project only
+        run: dotnet build DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Release /p:BuildProjectReferences=false
+
+      # 🧪 Chạy test (NUnit cho .NET 8)
       - name: Run tests
         run: dotnet test DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Release --no-build /p:BuildProjectReferences=false --logger "trx;LogFileName=test_results.trx"

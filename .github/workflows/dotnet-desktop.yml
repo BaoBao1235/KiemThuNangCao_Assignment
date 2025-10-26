@@ -23,12 +23,23 @@ jobs:
       - name: Restore NuGet packages
         run: nuget restore PRO231-DuAnTotNghiep.sln
 
-      - name: Build solution
-        run: msbuild PRO231-DuAnTotNghiep.sln /p:Configuration=Release
+      # 🧱 Build toàn bộ solution (bao gồm DuAnTotNghiep.Test)
+      - name: Build solution (include test project)
+        run: msbuild PRO231-DuAnTotNghiep.sln /p:Configuration=Release /p:Platform="Any CPU"
 
+      # 🧩 In ra danh sách thư mục build để kiểm tra file .dll thực tế
+      - name: Show directory structure for debugging
+        run: |
+          dir
+          dir .\DuAnTotNghiep.Test
+          dir .\DuAnTotNghiep.Test\bin
+          dir .\DuAnTotNghiep.Test\bin\Release
+
+      # ✅ Cài NUnit Console Runner
       - name: Download NUnit Console Runner
         run: nuget install NUnit.ConsoleRunner -Version 3.16.3 -OutputDirectory testrunner
 
+      # ✅ Chạy test (với đường dẫn tuyệt đối an toàn)
       - name: Run NUnit Tests
         run: |
-          ./testrunner/NUnit.ConsoleRunner.3.16.3/tools/nunit3-console.exe .\DuAnTotNghiep.Test\bin\Release\DuAnTotNghiep.Test.dll
+          ./testrunner/NUnit.ConsoleRunner.3.16.3/tools/nunit3-console.exe "$(Resolve-Path .\DuAnTotNghiep.Test\bin\Release\DuAnTotNghiep.Test.dll)"

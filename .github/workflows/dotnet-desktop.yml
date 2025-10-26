@@ -1,40 +1,49 @@
-name: .NET Framework CI with NUnit
+name: CI for PRO231-DuAnTotNghiep (.NET Framework + .NET 8 Tests)
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ main, master ]
 
 jobs:
-  build:
+  # Job 1: Build .NET Framework project
+  build-framework:
     runs-on: windows-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup MSBuild cho .NET Framework
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      # Setup NuGet
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
-      # Restore tất cả package (NUnit v.v.)
       - name: Restore NuGet packages
         run: nuget restore PRO231-DuAnTotNghiep.sln
 
-      # 🧱 Build project bằng MSBuild (not dotnet)
-      - name: Build solution
+      - name: Build .NET Framework solution
         run: msbuild PRO231-DuAnTotNghiep.sln /p:Configuration=Release /p:Platform="Any CPU"
 
-      # ✅ Cài NUnit Console Runner
-      - name: Download NUnit Console Runner
-        run: nuget install NUnit.ConsoleRunner -Version 3.16.3 -OutputDirectory testrunner
+  # Job 2: Build + Run tests (.NET 8)
+  test-dotnet:
+    runs-on: windows-latest
+    needs: build-framework
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # ✅ Chạy test project .NET Framework
-      - name: Run NUnit Tests
-        run: |
-          ./testrunner/NUnit.ConsoleRunner.3.16.3/tools/nunit3-console.exe .\DuAnTotNghiep.Test\bin\Release\DuAnTotNghiep.Test.dll
+      - name: Setup .NET SDK 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore test project
+        run: dotnet restore DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj
+
+      - name: Build test project
+        run: dotnet build DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Release --no-restore
+
+      - name: Run .NET 8 tests
+        run: dotnet test DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Release --no-build --logger "trx;LogFileName=test_results.trx"

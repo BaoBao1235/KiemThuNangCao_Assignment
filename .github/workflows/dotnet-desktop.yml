@@ -1,4 +1,4 @@
-name: .NET 8 CI with dotnet test
+name: .NET CI with NUnit
 
 on:
   push:
@@ -19,8 +19,11 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore dependencies
-        run: dotnet restore PRO231-DuAnTotNghiep.sln
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore PRO231-DuAnTotNghiep.sln
 
       - name: Build solution
         run: dotnet build PRO231-DuAnTotNghiep.sln --configuration Debug --no-restore

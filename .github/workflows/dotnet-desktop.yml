@@ -7,7 +7,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  # Job 1: Build .NET Framework project
+  # 🧱 Job 1: Build app .NET Framework
   build-framework:
     runs-on: windows-latest
     steps:
@@ -26,7 +26,7 @@ jobs:
       - name: Build .NET Framework solution
         run: msbuild PRO231-DuAnTotNghiep.sln /p:Configuration=Release /p:Platform="Any CPU"
 
-  # Job 2: Build + Run tests (.NET 8)
+  # 🧩 Job 2: Build + Run tests (.NET 8)
   test-dotnet:
     runs-on: windows-latest
     needs: build-framework
@@ -39,11 +39,15 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore test project
-        run: dotnet restore DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj
+      # 🧰 Tạo file NuGet.Config giả để tránh restore gói .NET Framework
+      - name: Disable legacy packages restore
+        run: |
+          echo "<?xml version='1.0' encoding='utf-8'?><configuration><disabledPackageSources><add key='local' value='true' /></disabledPackageSources></configuration>" > NuGet.Config
 
-      - name: Build test project
-        run: dotnet build DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Release --no-restore
+      # ⚙️ Build riêng test project (bỏ qua reference tới project chính)
+      - name: Build test project only
+        run: dotnet build DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Release --no-restore /p:BuildProjectReferences=false
 
-      - name: Run .NET 8 tests
-        run: dotnet test DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Release --no-build --logger "trx;LogFileName=test_results.trx"
+      # 🧪 Chạy test (.NET 8)
+      - name: Run tests
+        run: dotnet test DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Release --no-build /p:BuildProjectReferences=false --logger "trx;LogFileName=test_results.trx"

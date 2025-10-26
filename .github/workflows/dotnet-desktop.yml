@@ -1,4 +1,4 @@
-name: .NET CI with NUnit
+name: .NET Framework CI with NUnit
 
 on:
   push:
@@ -14,19 +14,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+      # Setup MSBuild cho .NET Framework
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
+      # Setup NuGet
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
+      # Restore tất cả package (NUnit v.v.)
       - name: Restore NuGet packages
         run: nuget restore PRO231-DuAnTotNghiep.sln
 
+      # 🧱 Build project bằng MSBuild (not dotnet)
       - name: Build solution
-        run: dotnet build PRO231-DuAnTotNghiep.sln --configuration Debug --no-restore
+        run: msbuild PRO231-DuAnTotNghiep.sln /p:Configuration=Release /p:Platform="Any CPU"
 
-      - name: Run tests
-        run: dotnet test DuAnTotNghiep.Test/DuAnTotNghiep.Test.csproj --configuration Debug --no-build --logger "trx;LogFileName=test_results.trx"
+      # ✅ Cài NUnit Console Runner
+      - name: Download NUnit Console Runner
+        run: nuget install NUnit.ConsoleRunner -Version 3.16.3 -OutputDirectory testrunner
+
+      # ✅ Chạy test project .NET Framework
+      - name: Run NUnit Tests
+        run: |
+          ./testrunner/NUnit.ConsoleRunner.3.16.3/tools/nunit3-console.exe .\DuAnTotNghiep.Test\bin\Release\DuAnTotNghiep.Test.dll

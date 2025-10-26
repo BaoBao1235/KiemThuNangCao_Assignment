@@ -23,3 +23,4 @@ namespace PRO231_DuAnTotNghiep
         }
     }
 }
+// Update for GitHub CI/CD setup

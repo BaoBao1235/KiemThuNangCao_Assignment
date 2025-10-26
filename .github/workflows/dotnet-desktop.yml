@@ -1,4 +1,4 @@
-name: .NET CI/CD with NUnit
+name: .NET Framework CI/CD
 
 on:
   push:
@@ -8,28 +8,25 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest   # 🔹 đổi ubuntu-latest → windows-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'   # hoặc 7.0 nếu project bạn dùng .NET 7
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
 
-      - name: Build project
-        run: dotnet build --configuration Release --no-restore
+      - name: Restore NuGet packages
+        run: nuget restore PRO231-DuAnTotNghiep.sln
 
-      - name: Run tests with NUnit
-        run: dotnet test --configuration Release --no-build --logger "trx;LogFileName=test_results.trx"
+      - name: Build solution
+        run: msbuild PRO231-DuAnTotNghiep.sln /p:Configuration=Release
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: NUnit-TestResults
-          path: '**/TestResults/*.trx'
+      - name: Run NUnit tests
+        run: |
+          dotnet tool install --global NUnit.ConsoleRunner --version 3.15.0
+          nunit3-console.exe .\PRO231-DuAnTotNghiep.Tests\bin\Release\PRO231-DuAnTotNghiep.Tests.dll
